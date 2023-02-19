@@ -7,11 +7,8 @@ Import hook into your project
 
 ### ECDSA hook example
 ```
+<script src="https://cdn.jsdelivr.net/gh/yngfoxx/web-crypto-hooks/subtle/ecdsa.js"></script>
 <script>
-importScripts(
-    `https://cdn.jsdelivr.net/gh/yngfoxx/web-crypto-hooks/subtle/ecdsa.js`
-)
-
 const cert     = await useECDSA()
 const hash     = cert.hash('test-message-to-hash')
 const sig      = await cert.sign(hash)
