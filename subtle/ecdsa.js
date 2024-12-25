@@ -64,7 +64,7 @@ async function useECDSA(algorithm = {name:'ECDSA',hash:'SHA-256'}) {
      * @param {string} ivHex
      * @returns
      */
-    const decrypt = async (cipherHex: string, ivHex: string) => {
+    const decrypt = async (cipherHex, ivHex) => {
         return await crypto.subtle.decrypt(
             { name: 'AES-CBC', iv: hex2buf(ivHex) },
             tmpKeys!.privateKey,
