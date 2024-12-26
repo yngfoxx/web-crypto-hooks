@@ -61,15 +61,58 @@ async function useECDSA(algorithm = {name:'ECDSA',hash:'SHA-256'}) {
 
     /**
      * @param {string} cipherHex
+     * @param {string} ephemeralPublicKeyHex
      * @param {string} ivHex
      * @returns
      */
-    const decrypt = async (cipherHex, ivHex) => {
-        return await crypto.subtle.decrypt(
-            { name: 'AES-CBC', iv: hex2buf(ivHex) },
-            tmpKeys!.privateKey,
-            hex2buf(cipherHex),
-        )
+    const decrypt = async (cipherHex, ephemeralPublicKeyHex, ivHex) => {
+
+        const privateKeyJwk = await crypto.subtle.exportKey('jwk', tmpKeys!.privateKey)
+        privateKeyJwk.key_ops = [ 'deriveBits' ];
+        const privateKey = await crypto.subtle.importKey('jwk',
+            privateKeyJwk, {
+                name: 'ECDH',
+                namedCurve: 'P-256'
+            },
+        false, [ 'deriveBits' ])
+
+        const xHex = ephemeralPublicKeyHex.slice(2, 66);    // Extract X
+        const yHex = ephemeralPublicKeyHex.slice(66);       // Extract Y
+        const ephemeralPublicKeyJwk = {
+            kty: 'EC',
+            crv: 'P-256',
+            x: base64UrlEncode(hex2uint8array(xHex)),
+            y: base64UrlEncode(hex2uint8array(yHex)),
+        };
+
+        const ephemeralPublicKey = await crypto.subtle.importKey('jwk',
+            ephemeralPublicKeyJwk, {
+                name: 'ECDH',
+                namedCurve: 'P-256'
+            },
+        false, []);
+
+        const sharedSecret = await crypto.subtle.deriveBits({
+            name: 'ECDH',
+            public: ephemeralPublicKey
+        }, privateKey, 256)
+
+        const aesHash = await crypto.subtle.digest('SHA-256', sharedSecret)
+        const aesKey = await crypto.subtle.importKey('raw',
+            aesHash, {
+                name: 'AES-CTR'
+            },
+        false, [ 'decrypt' ])
+        
+        const iv     = hex2buf(ivHex)
+        const cipher = hex2buf(cipherHex)
+        const plaintextBuffer = await crypto.subtle.decrypt({
+            name: 'AES-CTR',
+            counter: iv,
+            length: 128
+        }, aesKey, cipher);
+
+        return new TextDecoder().decode(plaintextBuffer);
     }
 
     return { tmpKeys, hash, sign, verify, decrypt, buf2hex, hex2buf }
