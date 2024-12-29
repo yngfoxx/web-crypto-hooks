@@ -67,7 +67,7 @@ async function useECDSA(algorithm = {name:'ECDSA',hash:'SHA-256'}) {
      */
     const decrypt = async (cipherHex, ephemeralPublicKeyHex, ivHex) => {
 
-        const privateKeyJwk = await crypto.subtle.exportKey('jwk', tmpKeys!.privateKey)
+        const privateKeyJwk = await crypto.subtle.exportKey('jwk', tmpKeys.privateKey)
         privateKeyJwk.key_ops = [ 'deriveBits' ];
         const privateKey = await crypto.subtle.importKey('jwk',
             privateKeyJwk, {
