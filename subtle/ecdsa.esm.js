@@ -1,4 +1,4 @@
-export async function useECDSA(algorithm = {name:'ECDSA',hash:'SHA-256'}) {
+export async function useECDSA(algo = {name:'ECDSA',hash:'SHA-256'}) {
     /** @type {CryptoKeyPair} */
     let tmpKeys
 
@@ -20,8 +20,16 @@ export async function useECDSA(algorithm = {name:'ECDSA',hash:'SHA-256'}) {
      * @param {string} hex 
      * @returns
      */
+    const hex2uint8array = (hex) => {
+        return new Uint8Array(hex.match(/[\da-f]{2}/gi).map(h=>parseInt(h,16)))
+    }
+
+    /**
+     * @param {string} hex 
+     * @returns
+     */
     const hex2buf = (hex) => {
-        return new Uint8Array(hex.match(/../g).map(h=>parseInt(h,16))).buffer
+        return hex2uint8array(hex).buffer
     }
 
     /**
@@ -39,7 +47,7 @@ export async function useECDSA(algorithm = {name:'ECDSA',hash:'SHA-256'}) {
      */
     const sign = async (hash) => {
         return await crypto.subtle.sign(
-            algorithm,
+            algo,
             tmpKeys.privateKey,
             hash
         )
@@ -52,7 +60,7 @@ export async function useECDSA(algorithm = {name:'ECDSA',hash:'SHA-256'}) {
      */
     const verify = async (hash, sig, pub = tmpKeys.publicKey) => {
         return await crypto.subtle.verify(
-            algorithm,
+            algo,
             pub,
             sig,
             hash
