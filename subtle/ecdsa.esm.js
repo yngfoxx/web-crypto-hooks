@@ -60,6 +60,17 @@ export async function useECDSA(algorithm = {name:'ECDSA',hash:'SHA-256'}) {
     }
 
     /**
+     * @param {Uint8Array} buf 
+     * @returns 
+     */
+    const base64UrlEncode = (buf) => {
+        return btoa(String.fromCharCode.apply(null, buf))
+            .replace(/\+/g, '-')
+            .replace(/\//g, "_")
+            .replace(/=+$/, "");
+    }
+
+    /**
      * @param {string} cipherHex
      * @param {string} ephemeralPublicKeyHex
      * @param {string} ivHex
